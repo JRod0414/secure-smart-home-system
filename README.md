@@ -12,36 +12,42 @@ The system will collect events from physical sensors, send them securely to a ba
 
 **Status:** In development
 
-### Current Progress
+## Current Progress
 
-✅ Project repository created
-✅ System architecture documented
-✅ HTTP + JSON event format defined
-✅ ESP32 development environment tested
+- ✅ Project repository created
+- ✅ System architecture documented
+- ✅ HTTP + JSON event format defined
+- ✅ ESP32 development environment tested
 
-✅ Express backend started
-✅ Health-check route created
-✅ POST /api/events route created
-✅ GET /api/events route created
-✅ Required-field request validation added
-✅ SQLite event storage added
-✅ Event retrieval tested with PowerShell
+### Backend
 
-✅ Frontend served from Express
-✅ Dashboard loads backend health status
-✅ Dashboard displays recent events
-✅ Dashboard counts door and motion events
-✅ Frontend changes pushed to GitHub
+- ✅ Express backend started
+- ✅ Health-check route created
+- ✅ POST `/api/events` route created
+- ✅ GET `/api/events` route created
+- ✅ Required-field request validation added
+- ✅ SQLite event storage added
+- ✅ Event retrieval tested with PowerShell
 
-⬜ Add actual ESP32 door sensor input
-⬜ Send ESP32 events over Wi-Fi
-⬜ Add motion sensor input
-⬜ Add device authentication/API key
-⬜ Add stronger validation for allowed sensor types
-⬜ Add HTTPS/deployment plan
-⬜ Improve dashboard styling
-⬜ Add event filtering or alerts
-⬜ Record end-to-end demo
+### Frontend
+
+- ✅ Frontend served from Express
+- ✅ Dashboard loads backend health status
+- ✅ Dashboard displays recent events
+- ✅ Dashboard counts door and motion events
+- ✅ Frontend changes pushed to GitHub
+
+### Next Steps
+
+- ⬜ Add actual ESP32 door sensor input
+- ⬜ Send ESP32 events over Wi-Fi
+- ⬜ Add motion sensor input
+- ⬜ Add device authentication / API key
+- ⬜ Add stronger validation for allowed sensor types
+- ⬜ Add HTTPS / deployment plan
+- ⬜ Improve dashboard styling
+- ⬜ Add event filtering or alerts
+- ⬜ Record end-to-end demo
 
 ## System Architecture
 

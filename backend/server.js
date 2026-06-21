@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 3000;
 
 // Allows the API to read JSON request bodies.
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "..", "frontend")));
 
 // Create a local folder for the database if it does not exist.
 const dataDirectory = path.join(__dirname, "data");

@@ -54,17 +54,65 @@ app.get("/api/events", (req, res) => {
   });
 });
 
+const allowedEventsBySensor = {
+  door: ["open", "closed"],
+  motion: ["detected"],
+};
+
 // Receive and store a sensor event.
 app.post("/api/events", (req, res) => {
   const { device_id, sensor_type, event, timestamp } = req.body || {};
 
-  if (!device_id || !sensor_type || !event) {
+  // Make sure the required values exist and are strings.
+  if (
+    typeof device_id !== "string" ||
+    typeof sensor_type !== "string" ||
+    typeof event !== "string"
+  ) {
     return res.status(400).json({
-      error: "device_id, sensor_type, and event are required",
+      error: "device_id, sensor_type, and event are required as strings",
     });
   }
 
-  const eventTimestamp = timestamp || new Date().toISOString();
+  // Remove accidental spaces from incoming values.
+  const cleanDeviceId = device_id.trim();
+  const cleanSensorType = sensor_type.trim().toLowerCase();
+  const cleanEvent = event.trim().toLowerCase();
+
+  // Reject blank or strangely formatted device IDs.
+  if (!/^[a-zA-Z0-9_-]{1,64}$/.test(cleanDeviceId)) {
+    return res.status(400).json({
+      error: "device_id must use only letters, numbers, underscores, or hyphens",
+    });
+  }
+
+  // Only allow sensor types your project currently supports.
+  if (!["door", "motion"].includes(cleanSensorType)) {
+    return res.status(400).json({
+      error: "sensor_type must be either door or motion",
+    });
+  }
+
+  // Make sure the event makes sense for that sensor.
+  if (!allowedEventsBySensor[cleanSensorType].includes(cleanEvent)) {
+    return res.status(400).json({
+      error: `event "${cleanEvent}" is not valid for sensor_type "${cleanSensorType}"`,
+    });
+  }
+
+  let eventTimestamp = new Date().toISOString();
+
+  // timestamp remains optional, but must be valid if the device sends one.
+  if (timestamp !== undefined) {
+    if (typeof timestamp !== "string" || Number.isNaN(Date.parse(timestamp))) {
+      return res.status(400).json({
+        error: "timestamp must be a valid date/time string",
+      });
+    }
+
+    eventTimestamp = new Date(timestamp).toISOString();
+  }
+
   const receivedAt = new Date().toISOString();
 
   const result = db
@@ -78,7 +126,13 @@ app.post("/api/events", (req, res) => {
       )
       VALUES (?, ?, ?, ?, ?)
     `)
-    .run(device_id, sensor_type, event, eventTimestamp, receivedAt);
+    .run(
+      cleanDeviceId,
+      cleanSensorType,
+      cleanEvent,
+      eventTimestamp,
+      receivedAt
+    );
 
   const storedEvent = db
     .prepare(`

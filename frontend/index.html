@@ -16,6 +16,13 @@
   <p>Motion Events: <span id="motionEvents">0</span></p>
 
   <h2>Recent Events</h2>
+  <label for="sensorFilter">Show:</label>
+  <select id="sensorFilter">
+    <option value="all">All events</option>
+    <option value="door">Door events</option>
+    <option value="motion">Motion events</option>
+  </select>
+  
   <button id="refreshButton">Refresh Events</button>
 
   <ul id="eventList"></ul>

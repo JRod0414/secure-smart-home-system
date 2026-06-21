@@ -14,7 +14,7 @@ The system will collect events from physical sensors, send them securely to a ba
 
 ### Current Progress
 
-* [x] GitHub repository and project board created
+* [X] GitHub repository and project board created
 * [x] High-level system architecture documented
 * [x] HTTP and JSON communication format defined
 * [x] ESP32 development environment tested

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Smart Home</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Secure Smart Home Dashboard</h1>
+
+  <p id="status">Checking system status...</p>
+
+  <p>Total Events: <span id="totalEvents">0</span></p>
+  <p>Door Events: <span id="doorEvents">0</span></p>
+  <p>Motion Events: <span id="motionEvents">0</span></p>
+
+  <h2>Recent Events</h2>
+  <button id="refreshButton">Refresh Events</button>
+
+  <ul id="eventList"></ul>
+
+  <script src="app.js"></script>
+</body>
+</html>

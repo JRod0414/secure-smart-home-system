@@ -14,16 +14,34 @@ The system will collect events from physical sensors, send them securely to a ba
 
 ### Current Progress
 
-* [X] GitHub repository and project board created
-* [x] High-level system architecture documented
-* [x] HTTP and JSON communication format defined
-* [x] ESP32 development environment tested
-* [ ] Read door sensor input with ESP32
-* [x] Build backend API
-* [x] Store and retrieve sensor events
-* [x] Create web dashboard
-* [ ] Add device authentication and request validation
-* [ ] Record an end-to-end demo
+✅ Project repository created
+✅ System architecture documented
+✅ HTTP + JSON event format defined
+✅ ESP32 development environment tested
+
+✅ Express backend started
+✅ Health-check route created
+✅ POST /api/events route created
+✅ GET /api/events route created
+✅ Required-field request validation added
+✅ SQLite event storage added
+✅ Event retrieval tested with PowerShell
+
+✅ Frontend served from Express
+✅ Dashboard loads backend health status
+✅ Dashboard displays recent events
+✅ Dashboard counts door and motion events
+✅ Frontend changes pushed to GitHub
+
+⬜ Add actual ESP32 door sensor input
+⬜ Send ESP32 events over Wi-Fi
+⬜ Add motion sensor input
+⬜ Add device authentication/API key
+⬜ Add stronger validation for allowed sensor types
+⬜ Add HTTPS/deployment plan
+⬜ Improve dashboard styling
+⬜ Add event filtering or alerts
+⬜ Record end-to-end demo
 
 ## System Architecture
 

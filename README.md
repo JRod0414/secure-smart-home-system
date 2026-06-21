@@ -19,9 +19,9 @@ The system will collect events from physical sensors, send them securely to a ba
 * [x] HTTP and JSON communication format defined
 * [x] ESP32 development environment tested
 * [ ] Read door sensor input with ESP32
-* [ ] Build backend API
-* [ ] Store and retrieve sensor events
-* [ ] Create web dashboard
+* [x] Build backend API
+* [x] Store and retrieve sensor events
+* [x] Create web dashboard
 * [ ] Add device authentication and request validation
 * [ ] Record an end-to-end demo
 

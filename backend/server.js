@@ -1,14 +1,33 @@
 const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const { DatabaseSync } = require("node:sqlite");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Allows the API to read JSON sent in requests.
+// Allows the API to read JSON request bodies.
 app.use(express.json());
 
-// Temporary in-memory event storage.
-// We will replace this with a database later.
-const events = [];
+// Create a local folder for the database if it does not exist.
+const dataDirectory = path.join(__dirname, "data");
+fs.mkdirSync(dataDirectory, { recursive: true });
+
+// Open or create a persistent SQLite database file.
+const dbPath = path.join(dataDirectory, "smart_home.db");
+const db = new DatabaseSync(dbPath);
+
+// Create the events table the first time the server runs.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    device_id TEXT NOT NULL,
+    sensor_type TEXT NOT NULL,
+    event TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    received_at TEXT NOT NULL
+  )
+`);
 
 // Check that the server is running.
 app.get("/api/health", (req, res) => {
@@ -18,8 +37,16 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Return all stored sensor events.
+// Return all stored sensor events, newest first.
 app.get("/api/events", (req, res) => {
+  const events = db
+    .prepare(`
+      SELECT id, device_id, sensor_type, event, timestamp, received_at
+      FROM events
+      ORDER BY id DESC
+    `)
+    .all();
+
   res.json({
     count: events.length,
     events,
@@ -36,20 +63,33 @@ app.post("/api/events", (req, res) => {
     });
   }
 
-  const newEvent = {
-    id: events.length + 1,
-    device_id,
-    sensor_type,
-    event,
-    timestamp: timestamp || new Date().toISOString(),
-    received_at: new Date().toISOString(),
-  };
+  const eventTimestamp = timestamp || new Date().toISOString();
+  const receivedAt = new Date().toISOString();
 
-  events.unshift(newEvent);
+  const result = db
+    .prepare(`
+      INSERT INTO events (
+        device_id,
+        sensor_type,
+        event,
+        timestamp,
+        received_at
+      )
+      VALUES (?, ?, ?, ?, ?)
+    `)
+    .run(device_id, sensor_type, event, eventTimestamp, receivedAt);
+
+  const storedEvent = db
+    .prepare(`
+      SELECT id, device_id, sensor_type, event, timestamp, received_at
+      FROM events
+      WHERE id = ?
+    `)
+    .get(Number(result.lastInsertRowid));
 
   res.status(201).json({
     message: "Sensor event stored",
-    event: newEvent,
+    event: storedEvent,
   });
 });
 

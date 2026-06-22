@@ -212,3 +212,7 @@ npm-debug.log*
 
 # Local database files
 backend/data/
+
+# Local ESP32 secrets and machine-specific configuration
+embedded/**/config.h
+embedded/**/secrets.h

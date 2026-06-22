@@ -1,81 +1,68 @@
 # Secure Smart Home System
 
-> An in-development secure IoT monitoring system that connects ESP32-based sensors to a backend API and web dashboard.
+> A full-stack IoT smart-home monitoring system using an ESP32-ready REST API, SQLite event storage, and a browser dashboard.
 
 ## Overview
 
-This project is a full-stack IoT smart-home monitoring system designed to explore embedded systems, web development, networking, and cybersecurity.
+This project is a secure smart-home monitoring system built to explore embedded systems, web development, networking, databases, and cybersecurity.
 
-The system will collect events from physical sensors, send them securely to a backend server, store the events in a database, and display recent activity through a web dashboard.
+It currently accepts sensor events through an HTTP/JSON API, validates and stores them in SQLite, and displays recent activity in a browser dashboard. PowerShell and an ESP32 test sender can both simulate sensor devices.
 
-## Project Status
+## Current Status
 
-**Status:** In development
+**Status:** Local MVP working
 
-## Current Progress
+### Completed
 
-- ✅ Project repository created
-- ✅ System architecture documented
-- ✅ HTTP + JSON event format defined
-- ✅ ESP32 development environment tested
-
-### Backend
-
-- ✅ Express backend started
-- ✅ Health-check route created
-- ✅ POST `/api/events` route created
-- ✅ GET `/api/events` route created
-- ✅ Required-field request validation added
-- ✅ SQLite event storage added
-- ✅ Event retrieval tested with PowerShell
-
-### Frontend
-
-- ✅ Frontend served from Express
-- ✅ Dashboard loads backend health status
-- ✅ Dashboard displays recent events
-- ✅ Dashboard counts door and motion events
-- ✅ Frontend changes pushed to GitHub
-
-### Next Steps
-
-- ⬜ Add actual ESP32 door sensor input
-- ⬜ Send ESP32 events over Wi-Fi
-- ⬜ Add motion sensor input
-- ⬜ Add device authentication / API key
-- ⬜ Add stronger validation for allowed sensor types
-- ⬜ Add HTTPS / deployment plan
-- ⬜ Improve dashboard styling
-- ⬜ Add event filtering or alerts
-- ⬜ Record end-to-end demo
+* [x] Express backend API
+* [x] `GET /api/health` endpoint
+* [x] `GET /api/events` endpoint
+* [x] `POST /api/events` endpoint
+* [x] SQLite persistence for sensor events
+* [x] Input validation for supported sensor types and events
+* [x] Browser dashboard served by Express
+* [x] Event totals for all, door, and motion events
+* [x] Frontend event filtering by sensor type
+* [x] PowerShell sensor-event testing
+* [x] ESP32 Wi-Fi connection and HTTP test event sender
+* [ ] Physical reed-switch door sensor integration
+* [ ] Device API-key authentication
+* [ ] HTTPS deployment and user authentication
 
 ## System Architecture
 
 ```text
-Door / Motion Sensor
-        ↓
-      ESP32
-        ↓  HTTP + JSON
-   Backend REST API
-        ↓
-     Database
-        ↓
- Web Monitoring Dashboard
+PowerShell or ESP32 Sensor Sender
+              ↓
+         HTTP + JSON
+              ↓
+       Express REST API
+              ↓
+        SQLite Database
+              ↓
+     Browser Dashboard
 ```
 
-## Planned Technology Stack
+## Technology Stack
 
-| Area            | Technologies                                                                             |
-| --------------- | ---------------------------------------------------------------------------------------- |
-| Embedded system | ESP32, Arduino framework, magnetic reed switch, motion sensor                            |
-| Communication   | HTTP, JSON                                                                               |
-| Backend         | REST API, database                                                                       |
-| Frontend        | Web dashboard                                                                            |
-| Security        | HTTPS, device identification, API keys or signed requests, JWT-based user authentication |
+| Area          | Technologies                                                           |
+| ------------- | ---------------------------------------------------------------------- |
+| Embedded      | ESP32, Arduino framework, planned NC magnetic reed switch              |
+| Communication | HTTP, JSON, Wi-Fi                                                      |
+| Backend       | Node.js, Express                                                       |
+| Database      | SQLite                                                                 |
+| Frontend      | HTML, CSS, JavaScript                                                  |
+| Security      | Input validation now; API keys, HTTPS, and user authentication planned |
 
-## Event Data Format
+## API Endpoints
 
-The ESP32 will send sensor events to the backend as JSON:
+| Method | Endpoint      | Purpose                                    |
+| ------ | ------------- | ------------------------------------------ |
+| `GET`  | `/api/health` | Confirms the API is running                |
+| `GET`  | `/api/events` | Returns stored sensor events, newest first |
+| `POST` | `/api/events` | Validates and stores a sensor event        |
+
+### Example Sensor Event
 
 ```json
 {
@@ -86,56 +73,61 @@ The ESP32 will send sensor events to the backend as JSON:
 }
 ```
 
-## Planned API Endpoints
+Supported event combinations:
 
-| Method | Endpoint      | Purpose                                  |
-| ------ | ------------- | ---------------------------------------- |
-| `POST` | `/api/events` | Receive sensor events from devices       |
-| `GET`  | `/api/events` | Retrieve stored events for the dashboard |
+* `door`: `open`, `closed`
+* `motion`: `detected`
 
-## Security Goals
+## Run Locally
 
-The system will be built in phases:
+```powershell
+cd backend
+npm install
+npm start
+```
 
-1. Encrypt device-to-server communication with HTTPS.
-2. Verify device identity using API keys, tokens, or signed requests.
-3. Authenticate dashboard users with JWT-based authentication.
-4. Validate incoming data and document potential threats and mitigations.
+Open the dashboard at:
+
+```text
+http://localhost:3000
+```
+
+## Test an Event with PowerShell
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/events" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body '{"device_id":"door_1","sensor_type":"door","event":"open"}'
+```
+
+## ESP32 Test Sender
+
+The repository includes an ESP32 sketch that connects to Wi-Fi and posts a hard-coded test event to the local API.
+
+Before uploading it, use your own local Wi-Fi credentials and the IPv4 address of the computer running the backend. Do not commit Wi-Fi credentials, API keys, or local IP configuration.
 
 ## Repository Structure
 
 ```text
 secure-smart-home-system/
-├── embedded/     # ESP32 firmware and sensor code
-├── backend/      # API server and database logic
-├── frontend/     # Web monitoring dashboard
-├── security/     # Threat model and authentication work
-└── docs/         # Architecture and project documentation
+├── backend/                         # Express API and SQLite database
+├── embedded/
+│   └── esp32_test_sender/           # ESP32 HTTP test sender
+├── frontend/                        # Browser dashboard
+├── security/                        # Future threat model and authentication work
+├── docs/                            # Architecture and project notes
+└── README.md
 ```
 
-## Team
+## Next Milestones
 
-* **Jared** — Embedded systems, sensor integration, device-to-backend communication
-* **Charlie** — Backend API, database, and frontend dashboard
-* **Riley** — Authentication, device validation, and threat modeling
-
-## Roadmap
-
-The immediate milestone is an end-to-end proof of concept:
-
-1. Detect a door open/close event with an ESP32.
-2. Send that event to the backend.
-3. Store the event.
-4. Display it on the dashboard.
-
-## Future Improvements
-
-* Real-time dashboard updates with WebSockets
-* Alerts for unexpected door or motion events
-* MQTT comparison with HTTP-based communication
-* Automated tests and CI checks
-* Deployment of the backend and dashboard
+1. Connect an NC magnetic reed switch to the ESP32.
+2. Send `open` and `closed` events only when the switch state changes.
+3. Add API-key authentication for device requests.
+4. Keep device secrets out of GitHub using ignored local configuration files.
+5. Add alerts or real-time dashboard updates.
 
 ## License
 
-This project is currently for educational and portfolio use.
+Educational and portfolio project.

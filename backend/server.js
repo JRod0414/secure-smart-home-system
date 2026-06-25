@@ -6,6 +6,25 @@ const { DatabaseSync } = require("node:sqlite");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Read the device configuration file.
+const deviceConfigPath = path.join(__dirname, "config", "devices.json");
+let deviceConfig;
+try {
+  const deviceConfigText = fs.readFileSync(deviceConfigPath, "utf8");
+  deviceConfig = JSON.parse(deviceConfigText);
+} catch (error) {
+  console.error("Could not load device config:", error.message);
+  process.exit(1);
+}
+if (
+  !deviceConfig.devices ||
+  typeof deviceConfig.devices !== "object" ||
+  Object.keys(deviceConfig.devices).length === 0
+) {
+  console.error("Device config must contain at least one configured device.");
+  process.exit(1);
+}
+
 // Allows the API to read JSON request bodies.
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "frontend")));
@@ -84,6 +103,16 @@ app.post("/api/events", (req, res) => {
     return res.status(400).json({
       error: "device_id must use only letters, numbers, underscores, or hyphens",
     });
+  }
+
+  const apiKey = req.get("X-API-Key");
+  const configuredDevice = deviceConfig.devices[cleanDeviceId];
+  if (
+    !apiKey ||
+    !configuredDevice ||
+    apiKey !== configuredDevice.apiKey
+  ) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   // Only allow sensor types your project currently supports.

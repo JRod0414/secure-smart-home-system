@@ -1,10 +1,6 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
-
-const char* ssid = "WIFI Name";
-const char* password = "WIFI Pass";
-
-const char* serverUrl = "http://ipv4:3000/api/events";
+#include "secrets.h"
 
 void setup() {
   Serial.begin(9600);
@@ -30,6 +26,7 @@ void setup() {
 
   http.begin(client, serverUrl);
   http.addHeader("Content-Type", "application/json");
+  http.addHeader("X-API-Key", deviceApiKey);
 
   String jsonEvent =
     "{\"device_id\":\"esp32_1\","

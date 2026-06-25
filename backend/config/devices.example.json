@@ -1,0 +1,7 @@
+{
+  "devices": {
+    "esp32_1": {
+      "apiKey": "replace-with-a-long-random-secret"
+    }
+  }
+}

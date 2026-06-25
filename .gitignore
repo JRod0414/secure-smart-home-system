@@ -216,3 +216,6 @@ backend/data/
 # Local ESP32 secrets and machine-specific configuration
 embedded/**/config.h
 embedded/**/secrets.h
+
+# Local backend device credentials
+backend/config/devices.json

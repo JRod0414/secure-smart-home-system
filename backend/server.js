@@ -1,7 +1,7 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-const { DatabaseSync } = require("node:sqlite");
+const { initializeDatabase } = require('./db/database');
 const crypto = require("node:crypto");
 const { promisify } = require("node:util");
 
@@ -40,38 +40,8 @@ app.use(express.static(path.join(__dirname, "..", "frontend")));
 
 app.use(cookieParser());
 
-// Create a local folder for the database if it does not exist.
-const dataDirectory = path.join(__dirname, "data");
-fs.mkdirSync(dataDirectory, { recursive: true });
-
-// Open or create a persistent SQLite database file.
-const dbPath = path.join(dataDirectory, "smart_home.db");
-const db = new DatabaseSync(dbPath);
-
-db.exec("PRAGMA foreign_keys = ON");
-
-// Create the events table the first time the server runs.
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE COLLATE NOCASE,
-    password_hash TEXT NOT NULL,
-    password_salt TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('admin', 'viewer')),
-    created_at TEXT NOT NULL,
-    disabled_at TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS sessions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    token_hash TEXT NOT NULL UNIQUE,
-    expires_at TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    last_seen_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  );
-`);
+// Database initialization from database.js
+const db = initializeDatabase();
 
 function normalizeUsername(value) {
   if (typeof value !== "string") {

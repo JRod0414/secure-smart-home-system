@@ -2,16 +2,19 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const { initializeDatabase } = require('./db/database');
-const crypto = require("node:crypto");
 const { hashPassword, verifyPassword } = require("./security/passwords");
-
+const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const SESSION_COOKIE_NAME = "smart_home_session";
-const SESSION_TTL_MS = 1000 * 60 * 60 * 12;
-
-const cookieParser = require("cookie-parser");
+const {
+  SESSION_COOKIE_NAME,
+  SESSION_TTL_MS,
+  createSessionToken,
+  hashSessionToken,
+  sessionCookieOptions,
+  clearSessionCookieOptions,
+} = require("./security/sessions");
 
 // Read the device configuration file.
 const deviceConfigPath = path.join(__dirname, "config", "devices.json");
@@ -57,27 +60,6 @@ function normalizeUsername(value) {
 
 function isValidPassword(value) {
   return typeof value === "string" && value.length >= 8 && value.length <= 128;
-}
-
-function createSessionToken() {
-  return crypto.randomBytes(32).toString("base64url");
-}
-
-function hashSessionToken(token) {
-  return crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("hex");
-}
-
-function sessionCookieOptions() {
-  return {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: SESSION_TTL_MS,
-    path: "/",
-  };
 }
 
 function publicUser(user) {
@@ -173,15 +155,6 @@ const deleteSessionById = db.prepare(`
   DELETE FROM sessions
   WHERE id = ?
 `);
-
-function clearSessionCookieOptions() {
-  return {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-  };
-}
 
 function loadCurrentUser(req, res, next) {
   const sessionToken = req.cookies[SESSION_COOKIE_NAME];

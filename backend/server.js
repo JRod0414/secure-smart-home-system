@@ -3,15 +3,13 @@ const fs = require("fs");
 const path = require("path");
 const { initializeDatabase } = require('./db/database');
 const crypto = require("node:crypto");
-const { promisify } = require("node:util");
+const { hashPassword, verifyPassword } = require("./security/passwords");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const scryptAsync = promisify(crypto.scrypt);
 const SESSION_COOKIE_NAME = "smart_home_session";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 12;
-const PASSWORD_KEY_LENGTH = 64;
 
 const cookieParser = require("cookie-parser");
 
@@ -59,33 +57,6 @@ function normalizeUsername(value) {
 
 function isValidPassword(value) {
   return typeof value === "string" && value.length >= 8 && value.length <= 128;
-}
-
-async function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString("hex");
-
-  const derivedKey = await scryptAsync(
-    password,
-    salt,
-    PASSWORD_KEY_LENGTH
-  );
-
-  return {
-    salt,
-    hash: derivedKey.toString("hex"),
-  };
-}
-
-async function verifyPassword(password, salt, storedHash) {
-  const derivedKey = await scryptAsync(
-    password,
-    salt,
-    PASSWORD_KEY_LENGTH
-  );
-
-  const storedKey = Buffer.from(storedHash, "hex");
-
-  return crypto.timingSafeEqual(storedKey, derivedKey);
 }
 
 function createSessionToken() {

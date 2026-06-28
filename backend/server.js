@@ -1,9 +1,9 @@
 const express = require("express");
-const fs = require("fs");
 const path = require("path");
 const { initializeDatabase } = require('./db/database');
 const { hashPassword, verifyPassword } = require("./security/passwords");
 const { createAuthMiddleware, publicUser } = require("./security/auth-middleware");
+const { loadDeviceConfig } = require("./config/devices");
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,24 +17,7 @@ const {
   clearSessionCookieOptions,
 } = require("./security/sessions");
 
-// Read the device configuration file.
-const deviceConfigPath = path.join(__dirname, "config", "devices.json");
-let deviceConfig;
-try {
-  const deviceConfigText = fs.readFileSync(deviceConfigPath, "utf8");
-  deviceConfig = JSON.parse(deviceConfigText);
-} catch (error) {
-  console.error("Could not load device config:", error.message);
-  process.exit(1);
-}
-if (
-  !deviceConfig.devices ||
-  typeof deviceConfig.devices !== "object" ||
-  Object.keys(deviceConfig.devices).length === 0
-) {
-  console.error("Device config must contain at least one configured device.");
-  process.exit(1);
-}
+const deviceConfig = loadDeviceConfig();
 
 // Allows the API to read JSON request bodies.
 app.use(express.json());

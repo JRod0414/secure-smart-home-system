@@ -4,6 +4,7 @@ const { initializeDatabase } = require('./db/database');
 const { hashPassword, verifyPassword } = require("./security/passwords");
 const { createAuthMiddleware, publicUser } = require("./security/auth-middleware");
 const { loadDeviceConfig } = require("./config/devices");
+const { validateSensorEvent } = require("./validation/event-validation");
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -72,11 +73,6 @@ app.get("/api/events", (req, res) => {
     events,
   });
 });
-
-const allowedEventsBySensor = {
-  door: ["open", "closed"],
-  motion: ["detected"],
-};
 
 const countUsers = db.prepare(`
   SELECT COUNT(*) AS count
@@ -285,18 +281,9 @@ app.post("/api/events", (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  // Only allow sensor types your project currently supports.
-  if (!["door", "motion"].includes(cleanSensorType)) {
-    return res.status(400).json({
-      error: "sensor_type must be either door or motion",
-    });
-  }
-
-  // Make sure the event makes sense for that sensor.
-  if (!allowedEventsBySensor[cleanSensorType].includes(cleanEvent)) {
-    return res.status(400).json({
-      error: `event "${cleanEvent}" is not valid for sensor_type "${cleanSensorType}"`,
-    });
+  const validation = validateSensorEvent(cleanSensorType, cleanEvent);
+  if (!validation.valid) {
+    return res.status(400).json({ error: validation.error });
   }
 
   let eventTimestamp = new Date().toISOString();

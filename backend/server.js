@@ -18,6 +18,8 @@ const {
 } = require("./security/sessions");
 
 const deviceConfig = loadDeviceConfig();
+const { createDeviceAuth } = require("./security/device-auth");
+const { isAuthorizedDevice } = createDeviceAuth(deviceConfig);
 
 // Allows the API to read JSON request bodies.
 app.use(express.json());
@@ -279,12 +281,7 @@ app.post("/api/events", (req, res) => {
   }
 
   const apiKey = req.get("X-API-Key");
-  const configuredDevice = deviceConfig.devices[cleanDeviceId];
-  if (
-    !apiKey ||
-    !configuredDevice ||
-    apiKey !== configuredDevice.apiKey
-  ) {
+  if (!isAuthorizedDevice(cleanDeviceId, apiKey)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 

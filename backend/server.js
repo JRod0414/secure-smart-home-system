@@ -5,6 +5,7 @@ const { hashPassword, verifyPassword } = require("./security/passwords");
 const { createAuthMiddleware, publicUser } = require("./security/auth-middleware");
 const { loadDeviceConfig } = require("./config/devices");
 const { validateSensorEvent } = require("./validation/event-validation");
+const { requirePermission } = require("./security/permissions");
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +32,7 @@ app.use(cookieParser());
 // Database initialization from database.js
 const db = initializeDatabase();
 const { loadCurrentUser, requireAuth, deleteSessionById } = createAuthMiddleware(db);
+app.use(loadCurrentUser);
 
 function normalizeUsername(value) {
   if (typeof value !== "string") {
@@ -106,8 +108,6 @@ const insertSession = db.prepare(`
   )
   VALUES (?, ?, ?, ?, ?)
 `);
-
-app.use(loadCurrentUser);
 
 app.get("/api/auth/setup-status", (req, res) => {
   const { count } = countUsers.get();

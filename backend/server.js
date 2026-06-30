@@ -61,7 +61,7 @@ app.get("/api/health", (req, res) => {
 });
 
 // Return all stored sensor events, newest first.
-app.get("/api/events", (req, res) => {
+app.get("/api/events", requireAuth, requirePermission("events:read"), (req, res) => {
   const events = db
     .prepare(`
       SELECT id, device_id, sensor_type, event, timestamp, received_at

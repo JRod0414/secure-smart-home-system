@@ -8,6 +8,28 @@ const motionEventsText = document.querySelector("#motionEvents");
 
 const sensorFilter = document.querySelector("#sensorFilter");
 
+const authPanel = document.querySelector("#authPanel");
+const dashboardPanel = document.querySelector("#dashboardPanel");
+const loginForm = document.querySelector("#loginForm");
+const usernameInput = document.querySelector("#usernameInput");
+const passwordInput = document.querySelector("#passwordInput");
+const loginMessage = document.querySelector("#loginMessage");
+const currentUser = document.querySelector("#currentUser");
+const logoutButton = document.querySelector("#logoutButton");
+
+function showLogin() {
+  authPanel.hidden = false;
+  dashboardPanel.hidden = true;
+  usernameInput.value = "";
+  passwordInput.value = "";
+}
+
+function showDashboard(user) {
+  authPanel.hidden = true;
+  dashboardPanel.hidden = false;
+  currentUser.textContent = `Signed in as ${user.username} (${user.role})`;
+}
+
 let allEvents = [];
 
 function displayEvents() {
@@ -80,6 +102,78 @@ async function loadDashboard() {
   }
 }
 
+async function initializeApp() {
+  try {
+    const response = await fetch("/api/auth/me");
+
+    if (response.status === 401) {
+      showLogin();
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error("Could not check authentication.");
+    }
+
+    const data = await response.json();
+
+    showDashboard(data.user);
+    loadDashboard();
+  } catch (error) {
+    showLogin();
+    loginMessage.textContent = "Could not connect to server.";
+    console.error(error);
+  }
+}
+
 refreshButton.addEventListener("click", loadDashboard);
 
-loadDashboard();
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  loginMessage.textContent = "";
+  const username = usernameInput.value;
+  const password = passwordInput.value;
+
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      loginMessage.textContent = data.error || "Could not log in.";
+      console.error(data);
+      return;
+    }
+    showDashboard(data.user);
+    loadDashboard();
+  } catch (error) {
+    loginMessage.textContent = "Could not connect to server.";
+    console.error(error);
+  }
+});
+
+logoutButton.addEventListener("click", async () => {
+  try {
+    const response = await fetch("/api/auth/logout", {
+      method: "POST"
+    });
+
+    if (!response.ok) {
+      statusText.textContent = "Could not log out.";
+      return;
+    }
+    currentUser.textContent = "";
+    showLogin();
+  } catch (error) {
+    statusText.textContent = "Could not connect to server.";
+    console.error(error);
+  }
+});
+
+initializeApp();

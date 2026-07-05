@@ -13,7 +13,7 @@ function initializeDatabase() {
 
     db.exec("PRAGMA foreign_keys = ON");
 
-    // Create the events table the first time the server runs.
+    // Create required application tables the first time the server runs.
     db.exec(`
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,6 +33,15 @@ function initializeDatabase() {
         created_at TEXT NOT NULL,
         last_seen_at TEXT NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+      CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        device_id TEXT NOT NULL,
+        sensor_type TEXT NOT NULL,
+        event TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        received_at TEXT NOT NULL
     );
     `);
     return db;

@@ -1,6 +1,7 @@
 const {
   SESSION_COOKIE_NAME,
   hashSessionToken,
+  clearSessionCookieOptions
 } = require("./sessions");
 
 function publicUser(user) {

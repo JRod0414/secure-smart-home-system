@@ -1,5 +1,5 @@
 const rolePermissions = {
-  admin: ["events:read", "events:write"],
+  admin: ["events:read", "users:read"],
   viewer: ["events:read"],
 };
 

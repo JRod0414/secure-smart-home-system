@@ -98,6 +98,12 @@ const findUserByUsername = db.prepare(`
   WHERE username = ?
 `);
 
+const listUsers = db.prepare(`
+  SELECT id, username, role, created_at, disabled_at
+  FROM users
+  ORDER BY id ASC
+`);
+
 const insertSession = db.prepare(`
   INSERT INTO sessions (
     user_id,
@@ -238,6 +244,20 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
     user: req.user,
   });
 });
+
+app.get(
+  "/api/admin/users",
+  requireAuth,
+  requirePermission("users:read"),
+  (req, res) => {
+    const users = listUsers.all();
+
+    res.json({
+      count: users.length,
+      users,
+    });
+  }
+);
 
 app.post("/api/auth/logout", requireAuth, (req, res) => {
   deleteSessionById.run(req.sessionId);

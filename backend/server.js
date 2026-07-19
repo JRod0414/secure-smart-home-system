@@ -98,6 +98,12 @@ const findUserByUsername = db.prepare(`
   WHERE username = ?
 `);
 
+const listUsers = db.prepare(`
+  SELECT id, username, role, created_at, disabled_at
+  FROM users
+  ORDER BY id ASC
+`);
+
 const insertSession = db.prepare(`
   INSERT INTO sessions (
     user_id,
@@ -108,6 +114,50 @@ const insertSession = db.prepare(`
   )
   VALUES (?, ?, ?, ?, ?)
 `);
+
+const findUserById = db.prepare(`
+  SELECT id, username, role, created_at, disabled_at
+  FROM users
+  WHERE id = ?
+`);
+
+const disableUser = db.prepare(`
+  UPDATE users
+  SET disabled_at = ?
+  WHERE id = ?
+`);
+
+const deleteSessionsForUser = db.prepare(`
+  DELETE FROM sessions
+  WHERE user_id = ?
+`);
+
+const enableUser = db.prepare(`
+  UPDATE users
+  SET disabled_at = NULL
+  WHERE id = ?
+`);
+
+const countActiveAdmins = db.prepare(`
+  SELECT COUNT(*) AS count
+  FROM users
+  WHERE role = 'admin'
+    AND disabled_at IS NULL
+`);
+
+function disableUserAccount(userId, disabledAt) {
+  db.exec("BEGIN");
+
+  try {
+    disableUser.run(disabledAt, userId);
+    deleteSessionsForUser.run(userId);
+
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+}
 
 app.get("/api/auth/setup-status", (req, res) => {
   const { count } = countUsers.get();
@@ -238,6 +288,184 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
     user: req.user,
   });
 });
+
+app.get(
+  "/api/admin/users",
+  requireAuth,
+  requirePermission("users:read"),
+  (req, res) => {
+    const users = listUsers.all();
+
+    res.json({
+      count: users.length,
+      users,
+    });
+  }
+);
+
+app.post(
+  "/api/admin/users",
+  requireAuth,
+  requirePermission("users:write"),
+  async (req, res) => {
+    try {
+      const username = normalizeUsername(req.body?.username);
+      const password = req.body?.password;
+      const role = req.body?.role;
+
+      if (!username) {
+        return res.status(400).json({
+          error:
+            "Username must be 3-32 characters and use only letters, numbers, underscores, or hyphens.",
+        });
+      }
+
+      if (!isValidPassword(password)) {
+        return res.status(400).json({
+          error: "Password must be between 8 and 128 characters.",
+        });
+      }
+
+      if (role !== "admin" && role !== "viewer") {
+        return res.status(400).json({
+          error: "Role must be either admin or viewer.",
+        });
+      }
+
+      const existingUser = findUserByUsername.get(username);
+
+      if (existingUser) {
+        return res.status(409).json({
+          error: "Username is already in use.",
+        });
+      }
+
+      const { salt, hash } = await hashPassword(password);
+      const createdAt = new Date().toISOString();
+
+      const result = insertUser.run(
+        username,
+        hash,
+        salt,
+        role,
+        createdAt
+      );
+
+      return res.status(201).json({
+        message: "User account created.",
+        user: {
+          id: Number(result.lastInsertRowid),
+          username,
+          role,
+          created_at: createdAt,
+          disabled_at: null,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to create user account:", error);
+
+      return res.status(500).json({
+        error: "Unable to create user account.",
+      });
+    }
+  }
+);
+
+app.patch(
+  "/api/admin/users/:id/disable",
+  requireAuth,
+  requirePermission("users:write"),
+  (req, res) => {
+    const userId = Number(req.params.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({
+        error: "User ID must be a positive integer.",
+      });
+    }
+
+    const user = findUserById.get(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User account not found.",
+      });
+    }
+
+    if (user.disabled_at) {
+      return res.status(409).json({
+        error: "User account is already disabled.",
+      });
+    }
+
+    if (user.id === req.user.id) {
+      return res.status(409).json({
+        error: "You cannot disable your own account.",
+      });
+    }
+
+    if (user.role === "admin") {
+      const { count } = countActiveAdmins.get();
+
+      if (count <= 1) {
+        return res.status(409).json({
+          error: "The last active admin cannot be disabled.",
+        });
+      }
+    }
+
+    const disabledAt = new Date().toISOString();
+
+    disableUserAccount(userId, disabledAt);
+
+    return res.json({
+      message: "User account disabled.",
+      user: {
+        ...user,
+        disabled_at: disabledAt,
+      },
+    });
+  }
+);
+
+app.patch(
+  "/api/admin/users/:id/enable",
+  requireAuth,
+  requirePermission("users:write"),
+  (req, res) => {
+    const userId = Number(req.params.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({
+        error: "User ID must be a positive integer.",
+      });
+    }
+
+    const user = findUserById.get(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User account not found.",
+      });
+    }
+
+    if (!user.disabled_at) {
+      return res.status(409).json({
+        error: "User account is already enabled.",
+      });
+    }
+
+    enableUser.run(userId);
+
+    return res.json({
+      message: "User account enabled.",
+      user: {
+        ...user,
+        disabled_at: null,
+      },
+    });
+  }
+);
 
 app.post("/api/auth/logout", requireAuth, (req, res) => {
   deleteSessionById.run(req.sessionId);

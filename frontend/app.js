@@ -22,6 +22,12 @@ const adminMessage = document.querySelector("#adminMessage");
 const userList = document.querySelector("#userList");
 const refreshUsersButton = document.querySelector("#refreshUsersButton");
 
+const createUserForm = document.querySelector("#createUserForm");
+const newUsernameInput = document.querySelector("#newUsernameInput");
+const newPasswordInput = document.querySelector("#newPasswordInput");
+const newRoleInput = document.querySelector("#newRoleInput");
+const createUserMessage = document.querySelector("#createUserMessage");
+
 function showLogin() {
   authPanel.hidden = false;
   dashboardPanel.hidden = true;
@@ -32,6 +38,9 @@ function showLogin() {
 
   usernameInput.value = "";
   passwordInput.value = "";
+
+  createUserForm.reset();
+  createUserMessage.textContent = "";
 }
 
 function showDashboard(user) {
@@ -83,6 +92,50 @@ async function loadUsers() {
     });
   } catch (error) {
     adminMessage.textContent =
+      "Could not connect to server.";
+
+    console.error(error);
+  }
+}
+
+async function createUser(event) {
+  event.preventDefault();
+
+  createUserMessage.textContent = "Creating user...";
+
+  const username = newUsernameInput.value;
+  const password = newPasswordInput.value;
+  const role = newRoleInput.value;
+
+  try {
+    const response = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username,
+        password,
+        role,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      createUserMessage.textContent =
+        data.error || "Could not create user.";
+      return;
+    }
+
+    createUserMessage.textContent =
+      `Created ${data.user.username} successfully.`;
+
+    createUserForm.reset();
+
+    await loadUsers();
+  } catch (error) {
+    createUserMessage.textContent =
       "Could not connect to server.";
 
     console.error(error);
@@ -187,6 +240,7 @@ async function initializeApp() {
 
 refreshButton.addEventListener("click", loadDashboard);
 refreshUsersButton.addEventListener("click", loadUsers);
+createUserForm.addEventListener("submit", createUser);
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();

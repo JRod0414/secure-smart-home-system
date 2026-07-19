@@ -85,11 +85,71 @@ async function loadUsers() {
         ? "Disabled"
         : "Enabled";
 
-      listItem.textContent =
-        `${user.username} — ${user.role} — ${status}`;
+      const userText = document.createElement("span");
+      userText.textContent =
+        `${user.username} — ${user.role} — ${status} `;
 
+      const toggleButton = document.createElement("button");
+      toggleButton.type = "button";
+
+      if (user.disabled_at) {
+        toggleButton.textContent = "Enable";
+      } else {
+        toggleButton.textContent = "Disable";
+      }
+
+      toggleButton.addEventListener("click", () => {
+        toggleUserStatus(user);
+      });
+
+      listItem.appendChild(userText);
+      listItem.appendChild(toggleButton);
       userList.appendChild(listItem);
     });
+  } catch (error) {
+    adminMessage.textContent =
+      "Could not connect to server.";
+
+    console.error(error);
+  }
+}
+
+async function toggleUserStatus(user) {
+  const action = user.disabled_at
+    ? "enable"
+    : "disable";
+
+  adminMessage.textContent =
+    `${action === "enable" ? "Enabling" : "Disabling"} ${user.username}...`;
+
+  try {
+    const response = await fetch(
+      `/api/admin/users/${user.id}/${action}`,
+      {
+        method: "PATCH",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      adminMessage.textContent =
+        data.error || `Could not ${action} user.`;
+      return;
+    }
+
+    await loadUsers();
+    adminMessage.textContent =
+      `${data.user.username} is now ${
+        data.user.disabled_at ? "disabled" : "enabled"
+      }.`;
+
+    adminMessage.textContent =
+      `${data.user.username} is now ${
+        data.user.disabled_at ? "disabled" : "enabled"
+      }.`;
+
+    await loadUsers();
   } catch (error) {
     adminMessage.textContent =
       "Could not connect to server.";

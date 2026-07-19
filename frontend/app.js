@@ -17,9 +17,19 @@ const loginMessage = document.querySelector("#loginMessage");
 const currentUser = document.querySelector("#currentUser");
 const logoutButton = document.querySelector("#logoutButton");
 
+const adminPanel = document.querySelector("#adminPanel");
+const adminMessage = document.querySelector("#adminMessage");
+const userList = document.querySelector("#userList");
+const refreshUsersButton = document.querySelector("#refreshUsersButton");
+
 function showLogin() {
   authPanel.hidden = false;
   dashboardPanel.hidden = true;
+  adminPanel.hidden = true;
+
+  userList.innerHTML = "";
+  adminMessage.textContent = "";
+
   usernameInput.value = "";
   passwordInput.value = "";
 }
@@ -28,6 +38,55 @@ function showDashboard(user) {
   authPanel.hidden = true;
   dashboardPanel.hidden = false;
   currentUser.textContent = `Signed in as ${user.username} (${user.role})`;
+
+  if (user.role === "admin") {
+    adminPanel.hidden = false;
+    loadUsers();
+  } else {
+    adminPanel.hidden = true;
+  }
+}
+
+async function loadUsers() {
+  adminMessage.textContent = "Loading users...";
+  userList.innerHTML = "";
+
+  try {
+    const response = await fetch("/api/admin/users");
+    const data = await response.json();
+
+    if (!response.ok) {
+      adminMessage.textContent =
+        data.error || "Could not load users.";
+      return;
+    }
+
+    adminMessage.textContent =
+      `${data.count} user account(s)`;
+
+    if (data.users.length === 0) {
+      userList.innerHTML = "<li>No users found.</li>";
+      return;
+    }
+
+    data.users.forEach((user) => {
+      const listItem = document.createElement("li");
+
+      const status = user.disabled_at
+        ? "Disabled"
+        : "Enabled";
+
+      listItem.textContent =
+        `${user.username} — ${user.role} — ${status}`;
+
+      userList.appendChild(listItem);
+    });
+  } catch (error) {
+    adminMessage.textContent =
+      "Could not connect to server.";
+
+    console.error(error);
+  }
 }
 
 let allEvents = [];
@@ -127,6 +186,7 @@ async function initializeApp() {
 }
 
 refreshButton.addEventListener("click", loadDashboard);
+refreshUsersButton.addEventListener("click", loadUsers);
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();

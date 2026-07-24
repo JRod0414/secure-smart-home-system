@@ -2,10 +2,11 @@ const crypto = require("node:crypto");
 const { promisify } = require("node:util");
 
 const scryptAsync = promisify(crypto.scrypt);
+const PASSWORD_SALT_LENGTH = 16;
 const PASSWORD_KEY_LENGTH = 64;
 
 async function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString("hex");
+  const salt = crypto.randomBytes(PASSWORD_SALT_LENGTH).toString("hex");
 
   const derivedKey = await scryptAsync(
     password,
@@ -27,6 +28,10 @@ async function verifyPassword(password, salt, storedHash) {
   );
 
   const storedKey = Buffer.from(storedHash, "hex");
+
+  if (storedKey.length !== derivedKey.length) {
+    return false;
+  }
 
   return crypto.timingSafeEqual(storedKey, derivedKey);
 }

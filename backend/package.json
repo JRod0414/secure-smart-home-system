@@ -1,14 +1,12 @@
 {
-  "name": "backend",
+  "name": "secure-smart-home-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Express and SQLite backend for a secure smart-home monitoring system.",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "check": "node --check server.js && node --check ../frontend/app.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "cookie-parser": "^1.4.7",

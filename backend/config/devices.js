@@ -1,5 +1,5 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 function loadDeviceConfig() {
   const devicesPath = path.join(__dirname, "devices.json");
@@ -20,6 +20,21 @@ function loadDeviceConfig() {
   ) {
     console.error("Device config must contain at least one configured device.");
     process.exit(1);
+  }
+
+  for (const [deviceId, configuredDevice] of Object.entries(
+    deviceConfig.devices
+  )) {
+    if (
+      !configuredDevice ||
+      typeof configuredDevice.apiKey !== "string" ||
+      configuredDevice.apiKey.trim() === ""
+    ) {
+      console.error(
+        `Device "${deviceId}" must contain a non-empty string apiKey.`
+      );
+      process.exit(1);
+    }
   }
 
   return deviceConfig;

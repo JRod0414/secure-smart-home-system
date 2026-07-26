@@ -5,7 +5,7 @@ const allowedEventsBySensor = {
 
 function validateSensorEvent(sensorType, event) {
   // Only allow sensor types your project currently supports.
-  if (!["door", "motion"].includes(sensorType)) {
+  if (!Object.hasOwn(allowedEventsBySensor, sensorType)) {
     return {
       valid: false,
       error: "sensor_type must be either door or motion",
@@ -19,7 +19,7 @@ function validateSensorEvent(sensorType, event) {
       error: `event "${event}" is not valid for sensor_type "${sensorType}"`,
     };
   }
-  return { valid: true, };
+  return { valid: true };
 }
 
 module.exports = {

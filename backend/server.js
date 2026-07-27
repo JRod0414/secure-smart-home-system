@@ -6,6 +6,7 @@ const { createAuthMiddleware, publicUser } = require("./security/auth-middleware
 const { loadDeviceConfig } = require("./config/devices");
 const { validateSensorEvent } = require("./validation/event-validation");
 const { requirePermission } = require("./security/permissions");
+const { createDeviceAuth } = require("./security/device-auth");
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,18 +21,20 @@ const {
 } = require("./security/sessions");
 
 const deviceConfig = loadDeviceConfig();
-const { createDeviceAuth } = require("./security/device-auth");
 const { isAuthorizedDevice } = createDeviceAuth(deviceConfig);
 
 // Allows the API to read JSON request bodies.
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "frontend")));
-
 app.use(cookieParser());
 
 // Database initialization from database.js
 const db = initializeDatabase();
-const { loadCurrentUser, requireAuth, deleteSessionById } = createAuthMiddleware(db);
+const { 
+  loadCurrentUser, 
+  requireAuth, 
+  deleteSessionById 
+} = createAuthMiddleware(db);
 app.use(loadCurrentUser);
 
 function normalizeUsername(value) {
@@ -159,19 +162,20 @@ function disableUserAccount(userId, disabledAt) {
   }
 }
 
-app.get("/api/auth/setup-status", (req, res) => {
+function isSetupRequired() {
   const { count } = countUsers.get();
+  return count === 0;
+}
 
+app.get("/api/auth/setup-status", (req, res) => {
   res.json({
-    setupRequired: count === 0,
+    setupRequired: isSetupRequired(),
   });
 });
 
 app.post("/api/auth/setup", async (req, res) => {
   try {
-    const { count } = countUsers.get();
-
-    if (count > 0) {
+    if (!isSetupRequired()) {
       return res.status(403).json({
         error: "Initial setup has already been completed.",
       });

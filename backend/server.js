@@ -366,9 +366,8 @@ app.post(
         },
       });
     } catch (error) {
-      console.error("Failed to create user account:", error);
-
-      return res.status(500).json({
+        console.error("Failed to create user account:", error);
+        return res.status(500).json({
         error: "Unable to create user account.",
       });
     }
@@ -380,55 +379,63 @@ app.patch(
   requireAuth,
   requirePermission("users:write"),
   (req, res) => {
-    const userId = Number(req.params.id);
+    try{
+      const userId = Number(req.params.id);
 
-    if (!Number.isInteger(userId) || userId <= 0) {
-      return res.status(400).json({
-        error: "User ID must be a positive integer.",
-      });
-    }
-
-    const user = findUserById.get(userId);
-
-    if (!user) {
-      return res.status(404).json({
-        error: "User account not found.",
-      });
-    }
-
-    if (user.disabled_at) {
-      return res.status(409).json({
-        error: "User account is already disabled.",
-      });
-    }
-
-    if (user.id === req.user.id) {
-      return res.status(409).json({
-        error: "You cannot disable your own account.",
-      });
-    }
-
-    if (user.role === "admin") {
-      const { count } = countActiveAdmins.get();
-
-      if (count <= 1) {
-        return res.status(409).json({
-          error: "The last active admin cannot be disabled.",
+      if (!Number.isInteger(userId) || userId <= 0) {
+        return res.status(400).json({
+          error: "User ID must be a positive integer.",
         });
       }
+
+      const user = findUserById.get(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          error: "User account not found.",
+        });
+      }
+
+      if (user.disabled_at) {
+        return res.status(409).json({
+          error: "User account is already disabled.",
+        });
+      }
+
+      if (user.id === req.user.id) {
+        return res.status(409).json({
+          error: "You cannot disable your own account.",
+        });
+      }
+
+      if (user.role === "admin") {
+        const { count } = countActiveAdmins.get();
+
+        if (count <= 1) {
+          return res.status(409).json({
+            error: "The last active admin cannot be disabled.",
+          });
+        }
+      }
+
+      const disabledAt = new Date().toISOString();
+
+      disableUserAccount(userId, disabledAt);
+
+      return res.json({
+        message: "User account disabled.",
+        user: {
+          ...user,
+          disabled_at: disabledAt,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to disable user account:", error);
+      
+      return res.status(500).json({
+        error: "Unable to disable user account.",
+      });
     }
-
-    const disabledAt = new Date().toISOString();
-
-    disableUserAccount(userId, disabledAt);
-
-    return res.json({
-      message: "User account disabled.",
-      user: {
-        ...user,
-        disabled_at: disabledAt,
-      },
-    });
   }
 );
 
@@ -437,37 +444,45 @@ app.patch(
   requireAuth,
   requirePermission("users:write"),
   (req, res) => {
-    const userId = Number(req.params.id);
+    try {
+      const userId = Number(req.params.id);
 
-    if (!Number.isInteger(userId) || userId <= 0) {
-      return res.status(400).json({
-        error: "User ID must be a positive integer.",
+      if (!Number.isInteger(userId) || userId <= 0) {
+        return res.status(400).json({
+          error: "User ID must be a positive integer.",
+        });
+      }
+
+      const user = findUserById.get(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          error: "User account not found.",
+        });
+      }
+
+      if (!user.disabled_at) {
+        return res.status(409).json({
+          error: "User account is already enabled.",
+        });
+      }
+
+      enableUser.run(userId);
+
+      return res.json({
+        message: "User account enabled.",
+        user: {
+          ...user,
+          disabled_at: null,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to enable user account:", error);
+      
+      return res.status(500).json({
+        error: "Unable to enable user account.",
       });
     }
-
-    const user = findUserById.get(userId);
-
-    if (!user) {
-      return res.status(404).json({
-        error: "User account not found.",
-      });
-    }
-
-    if (!user.disabled_at) {
-      return res.status(409).json({
-        error: "User account is already enabled.",
-      });
-    }
-
-    enableUser.run(userId);
-
-    return res.json({
-      message: "User account enabled.",
-      user: {
-        ...user,
-        disabled_at: null,
-      },
-    });
   }
 );
 

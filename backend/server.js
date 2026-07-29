@@ -487,13 +487,21 @@ app.patch(
 );
 
 app.post("/api/auth/logout", requireAuth, (req, res) => {
+  try {
   deleteSessionById.run(req.sessionId);
 
-  res
+  return res
     .clearCookie(SESSION_COOKIE_NAME, clearSessionCookieOptions())
     .json({
       message: "Logout successful.",
     });
+  } catch (error) {
+    console.error("Logout failed:", error);
+
+    return res.status(500).json({
+      error: "Unable to log out.",
+    });
+  }
 });
 
 // Receive and store a sensor event.

@@ -1,97 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure Smart Home</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <h1>Secure Smart Home Dashboard</h1>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <section id="authPanel">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <label for="usernameInput">Username</label>
-      <input id="usernameInput" type="text" name="username" required>
+    <title>Secure Smart Home</title>
 
-      <label for="passwordInput">Password</label>
-      <input id="passwordInput" type="password" name="password" required>
+    <link rel="stylesheet" href="style.css">
+  </head>
 
-      <button type="submit">Sign In</button>
-    </form>
-    <p id="loginMessage"></p>
-  </section>
+  <body>
+    <h1>Secure Smart Home Dashboard</h1>
 
+    <section id="authPanel">
+      <h2>Login</h2>
 
-  <section id="dashboardPanel" hidden>
-    <div>
-      <p id="currentUser"></p>
-      <button id="logoutButton" type="button">Log Out</button>
-    </div>
-    <p id="status">Checking system status...</p>
+      <form id="loginForm">
+        <label for="usernameInput">Username</label>
+        <input
+          id="usernameInput"
+          type="text"
+          name="username"
+          required
+        >
 
-    <p>Total Events: <span id="totalEvents">0</span></p>
-    <p>Door Events: <span id="doorEvents">0</span></p>
-    <p>Motion Events: <span id="motionEvents">0</span></p>
+        <label for="passwordInput">Password</label>
+        <input
+          id="passwordInput"
+          type="password"
+          name="password"
+          required
+        >
 
-  <section id="adminPanel" hidden>
-    <h2>User Management</h2>
+        <button type="submit">Sign In</button>
+      </form>
 
-    <p id="adminMessage"></p>
+      <p id="loginMessage"></p>
+    </section>
 
-    <button id="refreshUsersButton" type="button">
-      Refresh Users
-    </button>
+    <section id="dashboardPanel" hidden>
+      <div>
+        <p id="currentUser"></p>
+        <button id="logoutButton" type="button">Log Out</button>
+      </div>
 
-    <ul id="userList"></ul>
+      <p id="status">Checking system status...</p>
 
-    <h3>Create User</h3>
+      <p>Total Events: <span id="totalEvents">0</span></p>
+      <p>Door Events: <span id="doorEvents">0</span></p>
+      <p>Motion Events: <span id="motionEvents">0</span></p>
 
-    <form id="createUserForm">
-      <label for="newUsernameInput">Username</label>
-      <input
-        id="newUsernameInput"
-        type="text"
-        required
-        minlength="3"
-        maxlength="32"
-      >
+      <section id="adminPanel" hidden>
+        <h2>User Management</h2>
 
-      <label for="newPasswordInput">Password</label>
-      <input
-        id="newPasswordInput"
-        type="password"
-        required
-        minlength="8"
-        maxlength="128"
-      >
+        <p id="adminMessage"></p>
 
-      <label for="newRoleInput">Role</label>
-      <select id="newRoleInput">
-        <option value="viewer">Viewer</option>
-        <option value="admin">Admin</option>
+        <button id="refreshUsersButton" type="button">
+          Refresh Users
+        </button>
+
+        <ul id="userList"></ul>
+
+        <h3>Create User</h3>
+
+        <form id="createUserForm">
+          <label for="newUsernameInput">Username</label>
+          <input
+            id="newUsernameInput"
+            type="text"
+            required
+            minlength="3"
+            maxlength="32"
+          >
+
+          <label for="newPasswordInput">Password</label>
+          <input
+            id="newPasswordInput"
+            type="password"
+            required
+            minlength="8"
+            maxlength="128"
+          >
+
+          <label for="newRoleInput">Role</label>
+          <select id="newRoleInput">
+            <option value="viewer">Viewer</option>
+            <option value="admin">Admin</option>
+          </select>
+
+          <button type="submit">Create User</button>
+        </form>
+
+        <p id="createUserMessage"></p>
+      </section>
+
+      <h2>Recent Events</h2>
+
+      <label for="sensorFilter">Show:</label>
+      <select id="sensorFilter">
+        <option value="all">All events</option>
+        <option value="door">Door events</option>
+        <option value="motion">Motion events</option>
       </select>
 
-      <button type="submit">Create User</button>
-    </form>
+      <button id="refreshButton">Refresh Events</button>
 
-    <p id="createUserMessage"></p>
-  </section>
+      <ul id="eventList"></ul>
+    </section>
 
-    <h2>Recent Events</h2>
-    <label for="sensorFilter">Show:</label>
-    <select id="sensorFilter">
-      <option value="all">All events</option>
-      <option value="door">Door events</option>
-      <option value="motion">Motion events</option>
-    </select>
-    
-    <button id="refreshButton">Refresh Events</button>
-
-    <ul id="eventList"></ul>
-  </section>
-
-  <script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>

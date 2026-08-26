@@ -92,11 +92,8 @@ async function loadUsers() {
       const toggleButton = document.createElement("button");
       toggleButton.type = "button";
 
-      if (user.disabled_at) {
-        toggleButton.textContent = "Enable";
-      } else {
-        toggleButton.textContent = "Disable";
-      }
+      toggleButton.textContent =
+        user.disabled_at ? "Enable" : "Disable";
 
       toggleButton.addEventListener("click", () => {
         toggleUserStatus(user);
@@ -139,11 +136,6 @@ async function toggleUserStatus(user) {
     }
 
     await loadUsers();
-    adminMessage.textContent =
-      `${data.user.username} is now ${
-        data.user.disabled_at ? "disabled" : "enabled"
-      }.`;
-
     adminMessage.textContent =
       `${data.user.username} is now ${
         data.user.disabled_at ? "disabled" : "enabled"
@@ -233,7 +225,6 @@ function displayEvents() {
   });
 }
 
-// Runs once when the user changes the dropdown
 sensorFilter.addEventListener("change", displayEvents);
 
 async function loadDashboard() {
@@ -243,10 +234,17 @@ async function loadDashboard() {
     const healthResponse = await fetch("/api/health");
     const healthData = await healthResponse.json();
 
+    if (!healthResponse.ok) {
+      throw new Error("Could not check system status.");
+    }
     statusText.textContent = `System status: ${healthData.status}`;
 
     const eventsResponse = await fetch("/api/events");
     const eventsData = await eventsResponse.json();
+
+    if (!eventsResponse.ok) {
+      throw new Error("Could not load events.");
+    }
 
     // Save the full event list from the API
     allEvents = eventsData.events;
